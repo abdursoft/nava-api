@@ -12,16 +12,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('rewards', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->string('rewardType',200);
             $table->string('rewardTitle',300);
             $table->string('txnId',200);
             $table->decimal('amount');
             $table->string('currency',200);
             $table->string('created',200);
+            $table->bigInteger('playerId');
 
             // relation with user table
-            $table->foreignUuid('playerId')->references('id')->on('users')->cascadeOnUpdate()->restrictOnDelete();
+            $table->unsignedBigInteger('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnUpdate()->restrictOnDelete();
 
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();

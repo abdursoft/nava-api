@@ -15,7 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens([
             '*'
         ]);
-        $middleware->append(App\Http\Middleware\ActiveStatus::class);
+        // $middleware->append(App\Http\Middleware\ActiveStatus::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

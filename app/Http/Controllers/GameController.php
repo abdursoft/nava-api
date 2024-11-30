@@ -35,7 +35,11 @@ class GameController extends Controller
     public function gameList()
     {
         try {
-            $list = Http::withToken($this->gameToken())->get(env('QT_END_POINT') . "/v2/games")->throw()->json();
+            $payload = [
+                "orderBy" => "DESC",
+                "size" => 400
+            ];
+            $list = Http::withToken($this->gameToken())->withQueryParameters($payload)->get(env('QT_END_POINT') . "/v2/games")->throw()->json();
             return response()->json($list, 200);
         } catch (\Throwable $th) {
             return response()->json([
@@ -51,7 +55,7 @@ class GameController extends Controller
     public function gamePopular()
     {
         try {
-            $list = Http::withToken($this->gameToken())->get(env('QT_END_POINT') . "/v2/games/most-popular")->throw()->json();
+            $list = Http::withToken($this->gameToken())->get(env('QT_END_POINT') . "/v1/games/most-popular")->throw()->json();
             return response()->json($list, 200);
         } catch (\Throwable $th) {
             return response()->json([
@@ -69,7 +73,49 @@ class GameController extends Controller
         try {
             $payload = [
                 "gameTypes" => $category,
-                "orderBy" => "DESC"
+                "orderBy" => "DESC",
+                "size" => 300
+            ];
+            $list = Http::withToken($this->gameToken())->withQueryParameters($payload)->get(env('QT_END_POINT') . "/v2/games")->throw()->json();
+            return response()->json($list, 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'code' => 'UNAUTHORIZED',
+                'message' => "Unauthorized Action"
+            ], 401);
+        }
+    }
+
+    /**
+     * Game by provider
+     */
+    public function gameProvider($provider){
+        try {
+            $payload = [
+                "providers" => $provider,
+                "orderBy" => "DESC",
+                "size" => 300
+            ];
+            $list = Http::withToken($this->gameToken())->withQueryParameters($payload)->get(env('QT_END_POINT') . "/v2/games")->throw()->json();
+            return response()->json($list, 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'code' => 'UNAUTHORIZED',
+                'message' => "Unauthorized Action"
+            ], 401);
+        }
+    }
+
+        /**
+     * Game by provider and category
+     */
+    public function gameProviderCategory($provider,$category){
+        try {
+            $payload = [
+                "providers" => $provider,
+                "gameTypes" => $category,
+                "orderBy" => "DESC",
+                "size" => 300
             ];
             $list = Http::withToken($this->gameToken())->withQueryParameters($payload)->get(env('QT_END_POINT') . "/v2/games")->throw()->json();
             return response()->json($list, 200);
@@ -121,23 +167,25 @@ class GameController extends Controller
     /**
      * Single game
      */
-    public function gamePlay(Request $request, $id)
+    public function gamePlay(Request $request, $id,$device='desktop')
     {
         try {
             $user = User::find($request->header('id'));
-            $wallet = (new WalletController)->walletSession($request->header('id'));
+            $playerID = round(time() * $user->id);
+            $user->update([
+                'playerId' => $playerID
+            ]);
             $payload =  [
-                "playerId" => $user->id,
+                "playerId" => $playerID,
                 "currency" => $user->currency,
                 "country" => $user->country ?? 'BD',
                 "gender" => "M",
                 "birthDate" => $user->dob,
                 "lang" => "bn_BD",
                 "mode" => env("APP_MODE"),
-                "device" => "desktop",
-                "returnUrl" => "https://api.nava99.pro",
-                "walletSessionId" => $wallet,
-                "ballance" => "200"
+                "device" => $device,
+                "returnUrl" => "https://localhost:5173",
+                "walletSessionId" => $request->header('Authorization')
             ];
             $url = Http::withToken($this->gameToken())->post(env('QT_END_POINT') . "/v1/games/$id/launch-url", $payload)->throw()->json();
             return response()->json($url, 200);
@@ -207,8 +255,12 @@ class GameController extends Controller
 
         try {
             $list = Http::withToken($this->gameToken())->withQueryParameters($validator->validate())->get(env('QT_END_POINT') . "/v1/game-transaction")->throw()->json();
+            return response()->json($list, 200);
         } catch (\Throwable $th) {
-            //throw $th;
+            return response()->json([
+                'code' => "INPUT_VALIDATION_ERROR",
+                'message' => 'Please fill-up the required fields',
+            ], 400);
         }
     }
 }

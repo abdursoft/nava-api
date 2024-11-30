@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
 class Transaction extends Model
 {
@@ -27,7 +26,8 @@ class Transaction extends Model
         'created',
         'completed',
         'status',
-        'playerId'
+        'playerId',
+        'user_id'
     ];
 
     protected function jpContributions(): Attribute{
@@ -35,21 +35,5 @@ class Transaction extends Model
             get: fn($value) => json_decode($value, true),
             set: fn($value) => json_encode($value)
         );
-    }
-
-
-    /**
-     * Increment type
-     */
-    protected $keyType = 'string';
-    public $incrementing = false;
-
-    /**
-     * Generate the uuid
-     */
-    public static function booted() {
-        static::creating(function ($model) {
-            $model->id = Str::uuid();
-        });
     }
 }

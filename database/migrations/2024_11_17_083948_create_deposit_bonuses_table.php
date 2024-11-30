@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('deposit_bonuses', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->string('game',300);
             $table->decimal('amount');
             $table->string('message',300);

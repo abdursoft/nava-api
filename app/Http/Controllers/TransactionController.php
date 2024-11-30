@@ -50,7 +50,8 @@ class TransactionController extends Controller
                 "created" => $request->input('created'),
                 "completed" => $request->input('completed'),
              ];
-            $transaction = Transaction::create($data);
+            $player = User::where('playerId',$request->playerId)->first();
+            $transaction = Transaction::create(array_merge($data,['user_id' => $player->id]));
             if($request->header('id')){
                 $user = User::find($request->header('id'));
                 if($request->input('txnType') === 'DEBIT'){
@@ -137,7 +138,8 @@ class TransactionController extends Controller
                 "created" => $request->input('created'),
                 "completed" => $request->input('completed'),
              ];
-            $transaction = Transaction::create($data);
+            $player = User::where('playerId',$request->playerId)->first();
+            $transaction = Transaction::create(array_merge($data, ['user_id', $player->id]));
             $user = User::find($request->header('id'));
             if($request->input('completed') === 'true'){
                 $user->decrement('balance',$request->input('amount'));

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\DepositBonus;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class DepositBonusController extends Controller
@@ -30,53 +31,71 @@ class DepositBonusController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(),[
+        $validator = Validator::make($request->all(), [
             'game' => 'required',
             'amount' => 'required',
             'message' => 'required',
-            'turnover' => 'required',
             'minimum' => 'required',
             'status' => 'required',
+            'turnover' => 'required',
             'limit' => 'required',
+            'image' => 'required|file|mimes:jpeg,webp,png,jpeg,jpg',
+            'start_date' => 'required',
+            'end_date' => 'required',
         ]);
 
-        if($validator->fails()){
+        if ($validator->fails()) {
             return response()->json([
                 'status' => false,
                 'message' => 'Please fill-up the required fields',
-                'errors' => $validator->errors()
-            ],400);
+                'errors' => $validator->errors(),
+            ], 400);
         }
 
         try {
-            DepositBonus::create($validator->validate());
+            if ($request->hasFile('image')) {
+                $image = Storage::disk('public')->put('bonus', $request->file('image'));
+            }
+            DepositBonus::create([
+                'game' => $request->game,
+                'amount' => $request->amount,
+                'message' => $request->message,
+                'minimum' => $request->minimum,
+                'status' => $request->status,
+                'turnover' => $request->turnover,
+                'limit' => $request->limit,
+                'image' => $image ?? Null,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+            ]);
             return response()->json([
                 'status' => true,
-                'message' => 'Bonus successfully created'
-            ],201);
+                'message' => 'Bonus successfully created',
+            ], 201);
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => false,
-                'message' => 'Deposit bonus couldn\'t create'
-            ],400);
+                'message' => 'Deposit bonus couldn\'t create',
+                'errors' => $th->getMessage()
+            ], 400);
         }
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id=null)
+    public function show(string $id = null)
     {
-        if($id===null){
+        if ($id === null) {
             return response()->json([
                 'status' => true,
-                'bonus' => DepositBonus::all()
-            ],200);
-        }else{
+                'bonus' => DepositBonus::all(),
+            ], 200);
+        } else {
             return response()->json([
                 'status' => true,
-                'bonus' => DepositBonus::find($id)
-            ],200);
+                'bonus' => DepositBonus::find($id),
+            ], 200);
         }
     }
 
@@ -93,37 +112,56 @@ class DepositBonusController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $validator = Validator::make($request->all(),[
+        $validator = Validator::make($request->all(), [
             'game' => 'required',
             'amount' => 'required',
             'message' => 'required',
             'minimum' => 'required',
             'status' => 'required',
             'limit' => 'required',
-            'image' => 'required|file|mimes:jpeg,webp,png,jpeg,jpg',
+            'turnover' => 'required',
+            'image' => 'file|mimes:jpeg,webp,png,jpeg,jpg',
             'start_date' => 'required',
             'end_date' => 'required',
         ]);
 
-        if($validator->fails()){
+        if ($validator->fails()) {
             return response()->json([
                 'code' => 'INVALID_DATA',
                 'message' => 'Please fill-up the required fields',
-                'errors' => $validator->errors()
-            ],400);
+                'errors' => $validator->errors(),
+            ], 400);
         }
 
         try {
-            DepositBonus::where('id',$id)->update($validator->validate());
+            $exists = DepositBonus::find($id);
+            if ($request->hasFile('image')) {
+                $image = Storage::disk('public')->put('bonus', $request->file('image'));
+            }
+            DepositBonus::where('id', $id)->update([
+                'game' => $request->game,
+                'amount' => $request->amount,
+                'message' => $request->message,
+                'minimum' => $request->minimum,
+                'status' => $request->status,
+                'turnover' => $request->turnover,
+                'limit' => $request->limit,
+                'image' => $image ?? $exists->image,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+            ]);
+            if($request->hasFile('image')){
+                Storage::disk('public')->delete($exists->image);
+            }
             return response()->json([
                 'code' => 'BONUS_CREATED',
-                'message' => 'Bonus successfully updated'
-            ],201);
+                'message' => 'Bonus successfully updated',
+            ], 200);
         } catch (\Throwable $th) {
             return response()->json([
                 'code' => 'INTERNAL_SERVER_ERROR',
-                'message' => 'Deposit bonus couldn\'t update'
-            ],400);
+                'message' => 'Deposit bonus couldn\'t update',
+            ], 400);
         }
     }
 
@@ -133,16 +171,19 @@ class DepositBonusController extends Controller
     public function destroy(string $id)
     {
         try {
-            DepositBonus::where('id',$id)->delete();
+            $deposit = DepositBonus::find( $id);
+            if($deposit){
+                Storage::disk('public')->delete($deposit->image);
+            }
             return response()->json([
                 'code' => 'BONUS_RETRIEVED',
-                'message' => 'Bonus successfully deleted'
-            ],200);
+                'message' => 'Bonus successfully deleted',
+            ], 200);
         } catch (\Throwable $th) {
             return response()->json([
                 'code' => 'INTERNAL_SERVER_ERROR',
-                'message' => 'Bonus couldn\'t delete'
-            ],400);
+                'message' => 'Bonus couldn\'t delete',
+            ], 400);
         }
     }
 }

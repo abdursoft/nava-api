@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
+use App\Models\DepositBonus;
 use App\Models\PaymentTransaction;
-use App\Models\Transaction;
+use App\Models\Refer;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -69,5 +71,30 @@ class AdminController extends Controller
                 'errors' => $th->getMessage(),
             ], 400);
         }
+    }
+
+    /**
+     * Site statistics
+     */
+    public function statistics(){
+        $user = User::where('role','user')->count();
+        $agent = User::where('role','agent')->count();
+        $deposit = PaymentTransaction::where('pay_intent','CREDIT')->sum('payable_amount');
+        $withdraw = PaymentTransaction::where('pay_intent','DEBIT')->sum('payable_amount');
+        $refer = Refer::where('status', 'active')->count();
+        $bonus = DepositBonus::where('status','active')->count();
+        $category = Category::where('code','!=',null)->count();
+
+        return response()->json([
+            'code' => 'SITE_STATICS',
+            'message' => 'Site statistics retrieved',
+            'users' => $user,
+            'bonus' => $bonus,
+            'refer' => $refer,
+            'agents' => $agent,
+            'category' => $category,
+            'total_deposit' => $deposit,
+            'total_withdraw' => $withdraw,
+        ],200);
     }
 }

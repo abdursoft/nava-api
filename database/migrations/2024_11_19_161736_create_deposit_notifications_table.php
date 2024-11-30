@@ -12,14 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('deposit_notifications', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->enum('type',['Deposit','Withdraw']);
             $table->decimal('amount')->default(0);
             $table->longText('message')->nullable();
             $table->enum('status',['Pending','Completed','Canceled'])->nullable('Pending');
+            $table->enum('intent',['user','agent'])->nullable('agent');
 
-            $table->foreignUuid('user_id')->references('id')->on('users')->cascadeOnUpdate()->restrictOnDelete();
-            $table->foreignUuid('agent_id')->references('id')->on('users')->cascadeOnUpdate()->restrictOnDelete();
+            $table->unsignedBigInteger('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnUpdate()->restrictOnDelete();
 
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();

@@ -17,15 +17,14 @@ class BkashController extends Controller
     protected $bkash;
     public function __construct()
     {
-        $this->bkash = new Bkash(env('BKASH_USERNAME'),env('BKASH_PASSWORD'),env('BKASH_APP_KEY'),env('BKASH_APP_SECRET'),'production',"https://api.nava99.pro/payment/callback");
+        $this->bkash = new Bkash(env('BKASH_USERNAME'),env('BKASH_PASSWORD'),env('BKASH_APP_KEY'),env('BKASH_APP_SECRET'),'production',"https://api.nava99.pro/payment/bkash/callback");
     }
 
     /**
      * Create payment
      */
-    public function createPayment($amount, $token,){
-        $payment = $this->bkash->paymentCreate('store_payment',$amount,$token);
-        return redirect()->away($payment['bkashURL']);
+    public function createPayment($amount, $token){
+        return $this->bkash->paymentCreate('store_payment',$amount,$token);
     }
 
     /**
@@ -34,9 +33,9 @@ class BkashController extends Controller
     public function refundPayment(Request $request){
         $refund = $this->bkash->refund($request->id,$request->txn,$request->amount,$request->sku,$request->reason);
         if($refund['statusCode'] === '0000'){
-            return redirect('/')->with('success',"Refund process has been completed");
+            return redirect()->away(env('PAYMENT_END')."?success=Refund process has been completed");
         }else{
-            return redirect('/')->with('error',"Refund process has been failed");
+            return redirect()->away(env('PAYMENT_END')."?error=Refund process has been failed");
         }
     }
 
@@ -59,14 +58,8 @@ class BkashController extends Controller
                 if($invoice){
                     $user = User::find($invoice->user_id);
                     $user->increment('balance',$execute['amount']);
-                    PaymentTransaction::create([
-                        'user_id' => $user->id,
-                        'amount' => Session::get('amount') ?? $execute['amount'],
-                        'intent' => 'DEPOSIT',
-                        'status' => 'Completed',
-                        'host_role' => 'user',
-                        'wallet' => $execute['customerMsisdn'] ?? Null,
-                        'pay_intent' => 'CREDIT',
+                    $invoice->update([
+                        'status' => "Completed"
                     ]);
 
                     if(Session::get('bonusId')){
@@ -76,16 +69,30 @@ class BkashController extends Controller
                         ]);
                     }
                 }
-                return redirect('/')->with('success','Payment has been completed');
+                return redirect()->away(env('PAYMENT_END')."?success=Payment has been completed");
             }elseif($execute['statusCode'] == '2062'){
-                return redirect('/')->with('success','Payment has already been completed');
+                $this->changeStatus($request->query('paymentID'));
+                return redirect()->away(env('PAYMENT_END')."?success=Payment has already been completed");
             }
         }elseif($request->query('status') == 'cancel'){
-            return redirect('/')->with('error','Payment has been canceled');
+            $this->changeStatus($request->query('paymentID'));
+            return redirect()->away(env('PAYMENT_END')."?error=Payment has been canceled");
         }elseif($request->query('status') == 'failure'){
-            return redirect('/')->with('error','Payment has been failed');
+            $this->changeStatus($request->query('paymentID'));
+            return redirect()->away(env('PAYMENT_END')."?error=Payment has been failed");
         }else{
-            return redirect('/')->with('error','Payment couldn\'t completed');
+            $this->changeStatus($request->query('paymentID'));
+            return redirect()->away(env('PAYMENT_END')."?error=Payment couldn't completed");
+        }
+    }
+
+    /***
+     * Change payment status
+     */
+    public function changeStatus($id){
+        $invoice = PaymentTransaction::where('payment_id',$id)->first();
+        if($invoice){
+            $invoice->update(['status' => 'Failed']);
         }
     }
 
@@ -100,14 +107,8 @@ class BkashController extends Controller
                 if($invoice){
                     $user = User::find($invoice->user_id);
                     $user->increment('balance',$payment['amount']);
-                    PaymentTransaction::create([
-                        'user_id' => $user->id,
-                        'amount' => Session::get('amount') ?? $payment['amount'],
-                        'intent' => 'WITHDRAW',
-                        'status' => 'Completed',
-                        'host_role' => 'user',
-                        'wallet' => $phone,
-                        'pay_intent' => 'DEBIT',
+                    $invoice->update([
+                        'status' => "Completed"
                     ]);
 
                     if(Session::get('turnover')){
@@ -115,17 +116,11 @@ class BkashController extends Controller
                             'status' => 'Completed'
                         ]);
                     }
-                    if(Session::get('bonusId')){
-                        UserDepositBonus::create([
-                            'user_id' => $user->id,
-                            'bonus_id' => Session::get('bonus_id')
-                        ]);
-                    }
                 }
-                return redirect()->away(env('FRONT_END'));
+                return redirect()->away(env('PAYMENT_END'));
             }
         } catch (\Throwable $th) {
-            return redirect('/')->with('error',$th->getMessage());
+            return redirect()->away(env('PAYMENT_END'));
         }
     }
 }

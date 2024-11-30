@@ -12,11 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('user_deposit_bonuses', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
+
             // relation with bonus table
-            $table->foreignUuid('bonus_id')->references('id')->on('deposit_bonuses')->cascadeOnUpdate()->restrictOnDelete();
+            $table->unsignedBigInteger('deposit_bonus_id');
+            $table->foreign('deposit_bonus_id')->references('id')->on('deposit_bonuses')->cascadeOnUpdate()->restrictOnDelete();
+            
             // relation with user table
-            $table->foreignUuid('user_id')->references('id')->on('users')->cascadeOnUpdate()->restrictOnDelete();
+            $table->unsignedBigInteger('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnUpdate()->restrictOnDelete();
+
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
         });

@@ -20,6 +20,16 @@ Route::prefix('staging/qt')->group(function(){
 
     Route::get('/', [GameController::class, 'gameLobby']);
 
+    Route::post('transactions', [TransactionController::class, 'store']);
+    Route::post('transactions/rollback', [TransactionController::class, 'store']);
+    Route::post('bonus/reward', [BonusController::class, 'rewards']);
+
+    Route::prefix('accounts')->group(function(){
+        Route::get('{playerId}/session', [BalanceController::class, 'playerBalance']);
+        Route::get('{playerId}/balance', [BalanceController::class, 'playerBalance']);
+    });
+
+
     Route::get('promotion',function(){
         return "<h2>Welcome to your promotion page</h2>";
     });
@@ -50,6 +60,10 @@ Route::prefix('production/qt')->group(function(){
     Route::get('/', function () {
         return view('welcome');
     });
+
+    Route::post('transactions', [TransactionController::class, 'store']);
+    Route::post('transactions/rollback', [TransactionController::class, 'store']);
+    Route::post('bonus/reward', [BonusController::class, 'rewards']);
 
     Route::get('promotion',function(){
         return "<h2>Welcome to your promotion page</h2>";

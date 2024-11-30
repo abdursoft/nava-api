@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('transactions', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->enum('txnType',['DEBIT','CREDIT']);
             $table->string('roundId',200)->nullable();
             $table->decimal('amount');
@@ -28,9 +28,11 @@ return new class extends Migration
             $table->text('created')->nullable();
             $table->enum('completed',['true','false'])->default('false');
             $table->enum('status',['Pending','Completed','Canceled','Hold','Adjustment'])->default('Pending');
+            $table->bigInteger('playerId');
 
             // relation with user table
-            $table->foreignUuid('playerId')->references('id')->on('users')->cascadeOnUpdate()->restrictOnDelete();
+            $table->unsignedBigInteger('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnUpdate()->restrictOnDelete();
 
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();

@@ -118,7 +118,8 @@ class PaymentTransactionController extends Controller
                 'amount' => $amount,
                 'intent' => 'Payment',
                 'pay_intent' => 'CREDIT',
-                'payment' => $request->payment,
+                'bonus_id' => $request->bonus_id,
+                'payment' => strtolower($request->payment),
                 'payable_amount' => $request->amount
             ]);
 
@@ -169,7 +170,7 @@ class PaymentTransactionController extends Controller
                 'amount' => $amount,
                 'intent' => 'Withdraw',
                 'pay_intent' => 'DEBIT',
-                'payment' => $request->payment,
+                'payment' => strtolower($request->payment),
                 'payable_amount' => $request->amount
             ]);
 

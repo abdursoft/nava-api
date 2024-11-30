@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
 class ReferHistory extends Model
 {
@@ -11,22 +10,8 @@ class ReferHistory extends Model
         'amount',
         'turnover',
         'bonus',
-        'host',
-        'client',
+        'status',
+        'intent',
+        'user_id'
     ];
-
-    /**
-     * Increment type
-     */
-    protected $keyType = 'string';
-    public $incrementing = false;
-
-    /**
-     * Generate the uuid
-     */
-    public static function booted() {
-        static::creating(function ($model) {
-            $model->id = Str::uuid();
-        });
-    }
 }

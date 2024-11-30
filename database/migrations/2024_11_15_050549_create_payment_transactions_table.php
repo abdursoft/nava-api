@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('payment_transactions', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->uuid('bonus_id')->nullable();
             $table->decimal('payable_amount', 15, 2)->nullable();
             $table->decimal('amount', 15, 2)->nullable();
@@ -21,9 +21,11 @@ return new class extends Migration
             $table->enum('pay_intent',['DEBIT','CREDIT']);
             $table->string('payment',300)->default('bkash');
             $table->string('wallet',300)->nullable();
+            $table->string('payment_id',500)->nullable();
 
             // relation with user table
-            $table->foreignUuid('user_id')->references('id')->on('users')->cascadeOnUpdate()->restrictOnDelete();
+            $table->unsignedBigInteger('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnUpdate()->restrictOnDelete();
 
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();

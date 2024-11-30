@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('bonuses', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->string('rewardType',200);
             $table->string('rewardTitle',300);
             $table->string('txnId',300);
@@ -20,7 +20,9 @@ return new class extends Migration
             $table->string('currency',300);
 
             // relation with user table
-            $table->foreignUuid('playerId')->references('id')->on('users')->cascadeOnUpdate()->restrictOnDelete();
+            $table->unsignedBigInteger('playerId');
+            $table->unsignedBigInteger('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnUpdate()->restrictOnDelete();
 
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();

@@ -12,13 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('best_games', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->string('name',400);
             $table->string('game_id',400);
             $table->longText('image');
 
             // relation with category
-            $table->foreignUuid('category_id')->references('id')->on('categories')->cascadeOnUpdate()->restrictOnDelete();
+            $table->unsignedBigInteger('category_id');
+            $table->foreign('category_id')->references('id')->on('categories')->cascadeOnUpdate()->restrictOnDelete();
+            
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
         });

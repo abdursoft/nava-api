@@ -12,12 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('user_turn_overs', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->decimal('amount');
             $table->enum('status', ['Running', 'Completed'])->default('Running');
 
             // relation with user table
-            $table->foreignUuid('user_id')->references('id')->on('users')->cascadeOnUpdate()->restrictOnDelete();
+            $table->unsignedBigInteger('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnUpdate()->restrictOnDelete();
+            
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
         });

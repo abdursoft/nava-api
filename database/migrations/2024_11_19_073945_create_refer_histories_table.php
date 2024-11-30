@@ -12,14 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('refer_histories', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->decimal('amount')->default(0);
             $table->decimal('turnover')->default(0);
             $table->decimal('bonus')->default(0);
+            $table->enum('intent', ['client','host']);
+            $table->enum('status',['Processing','Completed'])->default('Processing');
 
             // relation with user table
-            $table->foreignUuid('host_id')->references('id')->on('users')->cascadeOnUpdate()->restrictOnDelete();
-            $table->foreignUuid('user_id')->references('id')->on('users')->cascadeOnUpdate()->restrictOnDelete();
+            $table->unsignedBigInteger('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnUpdate()->restrictOnDelete();
 
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();

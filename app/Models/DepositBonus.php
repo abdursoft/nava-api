@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
 class DepositBonus extends Model
 {
@@ -20,22 +19,6 @@ class DepositBonus extends Model
         'end_date',
         'description'
     ];
-
-    /**
-     * Increment type
-     */
-    protected $keyType = 'string';
-    public $incrementing = false;
-
-
-    /**
-     * Generate the uuid
-     */
-    public static function booted() {
-        static::creating(function ($model) {
-            $model->id = Str::uuid();
-        });
-    }
 
     public function userDepositBonus(){
         return $this->hasMany(UserDepositBonus::class);

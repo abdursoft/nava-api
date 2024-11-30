@@ -118,7 +118,7 @@ class PasswordController extends Controller
                 ],400);
             }else{
                 try {
-                    $user = User::find('email',$request->header('id'));
+                    $user = User::find($request->header('id'));
                     if(password_verify($old,$user->password)){
                         $user->update([
                             'password' => password_hash($new,PASSWORD_DEFAULT)

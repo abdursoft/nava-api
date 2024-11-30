@@ -55,7 +55,7 @@ class ReferController extends Controller
         return response()->json([
             'code' => 'REFER_CODE_RETRIEVED',
             'message' => 'Refer code retrieved',
-            'refer' => Refer::where('user_id', $request->header('id'))->first()
+            'refer' => Refer::with([''])->where('user_id', $request->header('id'))->first()
         ],200);
     }
 }

@@ -139,11 +139,10 @@ class AuthController extends Controller
      */
     public function signup(Request $request){
         $validate = Validator::make($request->all(),[
-            'phone' => 'required|min:11',
+            'phone' => 'required|min:11|unique:users,phone',
             'birthday' => 'required',
             'password' => 'required|min:5',
             'username' => 'required',
-            'email' => 'email'
         ]);
 
         if($validate->fails()){
@@ -169,11 +168,19 @@ class AuthController extends Controller
                     ]);
 
                     ReferHistory::create([
-                        'host' => $refer->user_id,
                         'amount' => 2000,
                         'turnover' => '10000',
                         'bonus' => 500,
-                        'client' => $user->id,
+                        'intent' => 'client',
+                        'user_id' => $user->id,
+                    ]);
+
+                    ReferHistory::create([
+                        'amount' => 2000,
+                        'turnover' => '10000',
+                        'bonus' => 500,
+                        'intent' => 'host',
+                        'user_id' => $refer->id,
                     ]);
 
                     Refer::create([
@@ -233,7 +240,7 @@ class AuthController extends Controller
      * profile data
      */
     public function profile(Request $request){
-        $profile = User::with(['paymentTransaction','refer','turnover','activeStatus','userDepositBonus','referHistory'])->find($request->header('id'));
+        $profile = User::with(['paymentTransaction','refer','turnover','activeStatus','userDepositBonus','userDepositBonus.depositBonus','referHistory'])->find($request->header('id'));
 
         return response()->json([
             "code" => 'PROFILE_RETRIEVED',
@@ -373,30 +380,37 @@ class AuthController extends Controller
         $user = User::where('phone', $request->input('phone'))->first();
         if ($user) {
             if (password_verify($request->input('password'), $user->password)) {
-                if (!$user->is_verified) {
-                    return response()->json([
-                        'code' => 'ACCOUNT_NOT_VERIFIED',
-                        'message' => 'Your account is not verified'
-                    ], 400);
-                } elseif ($user->is_blocked) {
-                    return response()->json([
-                        'code' => 'ACCOUNT_BLOCKED',
-                        'message' => 'Your account has been blocked'
-                    ], 400);
-                }elseif($user->is_deleted){
-                    return response()->json([
-                        'code' => 'ACCOUNT_DELETED',
-                    'message' => 'Sorry! Your account has been deleted'
-                    ], 400);
-                } else {
-                    $token = JWTAuth::createToken($user->role, 8740, $user->id, $user->email);
-                    return response()->json([
-                        'code' => 'LOGIN_SUCCESS',
-                        'message' => 'Login successful',
-                        'token_type' => 'Bearer',
-                        'token' => $token
-                    ], 200);
-                }
+                $token = JWTAuth::createToken($user->role, 8740, $user->id, $user->email);
+                return response()->json([
+                    'code' => 'LOGIN_SUCCESS',
+                    'message' => 'Login successful',
+                    'token_type' => 'Bearer',
+                    'token' => $token
+                ], 200);
+                // if (!$user->is_verified) {
+                //     return response()->json([
+                //         'code' => 'ACCOUNT_NOT_VERIFIED',
+                //         'message' => 'Your account is not verified'
+                //     ], 400);
+                // } elseif ($user->is_blocked) {
+                //     return response()->json([
+                //         'code' => 'ACCOUNT_BLOCKED',
+                //         'message' => 'Your account has been blocked'
+                //     ], 400);
+                // }elseif($user->is_deleted){
+                //     return response()->json([
+                //         'code' => 'ACCOUNT_DELETED',
+                //     'message' => 'Sorry! Your account has been deleted'
+                //     ], 400);
+                // } else {
+                //     $token = JWTAuth::createToken($user->role, 8740, $user->id, $user->email);
+                //     return response()->json([
+                //         'code' => 'LOGIN_SUCCESS',
+                //         'message' => 'Login successful',
+                //         'token_type' => 'Bearer',
+                //         'token' => $token
+                //     ], 200);
+                // }
             } else {
                 return response()->json([
                     'code' => 'INCORRECT_PASSWORD',

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Balance;
 use App\Models\Bonus;
 use App\Models\Transaction;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -71,33 +72,27 @@ class BonusController extends Controller
      * Bonus rewards
      */
     public function rewards(Request $request){
-        $validator = Validator::make($request->all(),[
-            "rewardType" => 'required',
-            "rewardTitle" => 'required',
-            "txnId" => 'required',
-            "playerId" => 'required',
-            "amount" => 'required',
-            "currency" => 'required',
-        ]);
 
-        if($validator->fails()){
-            return response()->json([
-                'code' => 'REQUIRED_DATA_MISSING',
-                'message' => 'All required data should be put',
-                'errors' => $validator->errors()
-            ],400);
-        }
-
+        $data = [
+            "rewardType" => $request->rewardType,
+            "rewardTitle" => $request->rewardTitle,
+            "txnId" => $request->txnId,
+            "playerId" => $request->playerId,
+            "amount" => $request->amount,
+            "currency" => $request->currency,
+        ];
 
         try {
             DB::beginTransaction();
-            Bonus::create($validator->validate());
+            $player = User::where('playerId',$request->playerId)->first();
+            Bonus::create(array_merge($data,['user_id' => $player->id]));
             $transaction = Transaction::create([
                 'txnType' => 'CREDIT',
                 'amount' => $request->input('amount'),
                 'playerId' => $request->input('playerId'),
                 'currency' => $request->input('currency'),
-                'options' => 'Bonus Rewards'
+                'options' => 'Bonus Rewards',
+                'user_id' => $player->id
             ]);
             Balance::where('user_id',$request->input('playerId'))->increment('balance',$request->amount);
             $balance = Balance::find($request->input('playerId'));

@@ -17,77 +17,84 @@ class UserController extends Controller
 {
 
     /**
-     * Withdrawal request for the user
+     * Get users
      */
-    public function withdraw(Request $request){
-        $user = Auth::guard('user')->user();
+    public function getUser($id=null){
+        if($id === null){
+            $user = User::with(['paymentTransaction','refer','turnover','activeStatus','userDepositBonus','userDepositBonus.depositBonus','referHistory'])->get();
+        }else{
+            $user = User::with(['paymentTransaction','refer','turnover','activeStatus','userDepositBonus','userDepositBonus.depositBonus','referHistory'])->find($id);
+        }
+        return response()->json([
+            'code' => 'USER_RETRIEVED',
+            'message' => 'User successfully retrieved',
+            'users' => $user
+        ],200);
+    }
 
-        if($request->input('amount') > $user->balance){
+    /**
+     * Get user transaction
+     */
+    public function userTransaction($id=null){
+        if($id === null){
+            $transactions = PaymentTransaction::with(['user'])->get();
+        }else{
+            $transactions = PaymentTransaction::with(['user'])->find($id);
+        }
+        return response()->json([
+            'code' => 'TRANSACTIONS_RETRIEVED',
+            'message' => 'Transactions successfully retrieved',
+            'transactions' => $transactions
+        ],200);
+    }
+
+    /**
+     * User refer
+     */
+    public function userRefer($id=null){
+        if($id === null){
+            $refer = Refer::with(['user'])->get();
+        }else{
+            $refer = Refer::with(['user'])->find($id);
+        }
+        return response()->json([
+            'code' => 'REFER_RETRIEVED',
+            'message' => 'Refer successfully retrieved',
+            'refers' => $refer
+        ],200);
+    }
+
+    /**
+     * update user status
+     */
+    public function userStatus(Request $request){
+        $validator = Validator::make($request->all(),[
+            'status' => 'required',
+            'id' => 'required|exists:users,id'
+        ]);
+        
+        if($validator->fails()){
             return response()->json([
-                'status' => false,
-                'message' => 'Insufficient Balance'
+                'code' => 'INVALID_DATE',
+                'message' => 'Invalid data',
+                'errors' => $validator->errors()
             ],400);
         }
 
         try {
-            DB::beginTransaction();
-            User::where('id',$user->id)->decrement('balance',$request->input('amount'));
-            Transaction::create([
-                'user_id' => $user->id,
-                'agent_id' => $user->agent_id,
-                'amount' => $request->input('amount'),
-                'intent' => 'Withdraw',
-                'pay_intent' => 'Credit',
-                'host_role' => 'user',
-                'client_role' => 'agent',
-                'status' => 'Pending',
-                'end_date' => date('Y-m-d',strtotime("+3 days"))
+            User::where('id', $request->header('id'))->update([
+                'is_verified' => $request->status
             ]);
-            DB::commit();
             return response()->json([
-                'status' => true,
-                'message' => "Withdrawal request has been sent to agent"
-            ],201);
+                'code' => 'USER_UPDATED',
+                'message' => 'User status successfully changed'
+            ],200);
         } catch (\Throwable $th) {
-            DB::rollBack();
             return response()->json([
-                'status' => false,
-                'message' => 'Withdrawl request have been failed',
-                'errors' => $th->getMessage()
+                'code' => 'INTERNAL_SERVER_ERROR',
+                'message' => $th->getMessage()
             ],400);
         }
-    }
-
-    // Use Details
-    public function details(){
-        return response()->json(Auth::guard('user-api')->user());
-    }
-
-
-    // will return user transaction
-    public function transactions(Request $request, $slug=null){
-        if(!empty($slug)){
-
-        }else{
-            return Transaction::where('user_id',$request->header('id'))->orWhere('user_id',$request->header('id'))->get();
-        }
-    }
-
-    /**
-     * user Profile information
-     */
-    public function profile(Request $request){
-        $profile = User::find($request->header('id'));
-        $deposit = PaymentTransaction::where('user_id',$request->header('id'))->where('pay_intent','CREDIT')->get();
-        $withdraw = PaymentTransaction::where('user_id',$request->header('id'))->where('pay_intent', 'DEBIT');
-        $refer = Refer::where('user_id',$request->header('id'))->get();
-
-        return response()->json([
-            "user" => $profile,
-            "deposit" => $deposit,
-            "withdraw" => $withdraw,
-            "refer" => $refer
-        ],200);
     }
 }
 

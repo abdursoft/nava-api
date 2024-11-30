@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
@@ -32,14 +31,9 @@ class User extends Authenticatable
         'reference_id',
         'is_verified',
         'is_blocked',
-        'role'
+        'role',
+        'playerId'
     ];
-
-    /**
-     * Increment type
-     */
-    protected $keyType = 'string';
-    public $incrementing = false;
 
     /**
      * The attributes that should be hidden for serialization.
@@ -62,15 +56,6 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
-    }
-
-    /**
-     * Generate the uuid
-     */
-    public static function booted() {
-        static::creating(function ($model) {
-            $model->id = Str::uuid();
-        });
     }
 
     public function activeStatus(){

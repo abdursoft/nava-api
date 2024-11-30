@@ -41,7 +41,8 @@ class RewardController extends Controller
                 "created" => $request->input('created'),
             ];
             DB::beginTransaction();
-            $reward = Reward::create($data);
+            $player = User::where('playerId',$request->playerId)->first();
+            $reward = Reward::create(array_merge($data, ['user_id' => $player->id]));
             $user = User::find($request->header('id'));
             if($request->input('completed') === 'true'){
                 $user->decrement('balance',$request->input('amount'));

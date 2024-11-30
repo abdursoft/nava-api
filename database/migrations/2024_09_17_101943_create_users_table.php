@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->string('phone',20);
             $table->string('email')->nullable();
             $table->enum('role',['user','agent','admin'])->default('user');
@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('city')->nullable();
             $table->string('street')->nullable();
             $table->date('dob');
+            $table->bigInteger('playerId')->default(0);
             $table->string('profile',400)->nullable();
             $table->enum('is_verified',['0','1'])->default('0');
             $table->enum('is_blocked',['0','1'])->default('0');

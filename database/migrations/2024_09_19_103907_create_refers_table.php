@@ -12,12 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('refers', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->id();
             $table->string('refer_code',50)->unique();
             $table->enum('status', ['active','inactive']);
 
             // relation with user table
-            $table->foreignUuid('user_id')->references('id')->on('users')->cascadeOnUpdate()->restrictOnDelete();
+            $table->unsignedBigInteger('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnUpdate()->restrictOnDelete();
 
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();

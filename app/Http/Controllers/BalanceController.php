@@ -69,33 +69,17 @@ class BalanceController extends Controller
      * Player balance
      */
     public function playerBalance(Request $request, $playerId){
-        if(!empty($request->header('id')) || env('QT_PASS_KEY') == $request->header('Pass-Key')){
-            try {
-                if(!empty($request->query('gameId'))){
-                    $balance = Balance::where('user_id',$playerId)->first();
-                    return response()->json([
-                        "balance" => $balance->balance,
-                        "currency" => $balance->currency
-                    ],200);
-                }else{
-                    $balance = Transaction::where('playerId',$playerId)->where('gameId',$request->query('gameId'))->sum('amount')->get();
-                    return response()->json([
-                        "balance" => $balance->amount,
-                        "currency" => "BDT"
-                    ],200);
-                }
-
-            } catch (\Throwable $th) {
-                return response()->json([
-                    "code" => "UNKNOWN_ERROR",
-                    "message" => $th->getMessage()
-                ],400);
-            }
+        if(!empty($playerId) && !empty($request->header('Pass-Key'))){
+            $balance = User::where('user_id',$playerId)->first();
+            return response()->json([
+                "balance" => $balance->balance,
+                "currency" => $balance->currency
+            ],200);
         }else{
             return response()->json([
-                'code' => 'LOGIN_FAILED',
-                'message' => "Unauthorized access"
-            ],401);
+                "code" => "LOGIN_FAILED",
+                "message" => "The given pass-key is incorrect"
+            ],200);
         }
     }
 }

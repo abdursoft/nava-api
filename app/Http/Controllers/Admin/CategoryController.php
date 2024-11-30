@@ -100,7 +100,7 @@ class CategoryController extends Controller
     {
         $validator = Validator::make($request->all(),[
             'name' => 'required',
-            'code' => 'required|exists:categories,code,'.$id.',id',
+            'code' => 'required|unique:categories,code,'.$id.',id',
             'image' => 'file|mimes:jpeg,jpg,png,webp',
         ]);
 
@@ -118,6 +118,7 @@ class CategoryController extends Controller
                 'code' => $request->code,
                 'image' => $request->hasFile('image') ? Storage::disk('public')->put('category',$request->file('image')) : $exists->image
             ]);
+            $exists ? Storage::disk('public')->delete($exists->image) : true;
             return response()->json([
                 'code' => 'CATEGORY_UPDATED',
                 'message' => 'Category successfully updated'

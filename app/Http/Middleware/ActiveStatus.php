@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Http\Controllers\Auth\JWTAuth;
 use App\Models\ActiveStatus as ModelsActiveStatus;
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,16 +20,19 @@ class ActiveStatus
     {
         if(!empty($request->header('Authorization'))){
             $token = JWTAuth::verifyToken($request->header('Authorization'),false);
-            ModelsActiveStatus::updateOrCreate(
-                [
-                    'user_id' => $token->id
-                ],
-                [
-                    'user_id' => $token->id,
-                    'status' => 'active',
-                    'active_note' => 'active now'
-                ]
-            );
+            $user = User::find($token->id);
+            if(!empty($user)){
+                ModelsActiveStatus::updateOrCreate(
+                    [
+                        'user_id' => $token->id
+                    ],
+                    [
+                        'user_id' => $token->id,
+                        'status' => 'active',
+                        'active_note' => 'active now'
+                    ]
+                );
+            }
         }
         return $next($request);
     }

@@ -11,6 +11,7 @@ use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PaymentTransactionController;
 use App\Http\Controllers\ReferController;
 use App\Http\Controllers\ReferHistoryController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserDepositBonusController;
 use App\Http\Controllers\UserTurnOverController;
 use App\Http\Middleware\AdminAuthentication;
@@ -31,10 +32,13 @@ Route::prefix('v1')->group(function(){
     Route::prefix('games')->controller(GameController::class)->group(function(){
         Route::get('/', [GameController::class,'gameList']);
         Route::get('category/{category}',[GameController::class,'gameCategory']);
+        Route::get('provider/{provider}',[GameController::class,'gameProvider']);
+        Route::get('category-provider/{provider}/{category}',[GameController::class,'gameProviderCategory']);
         Route::get('popular',[GameController::class,'gamePopular']);
         Route::get('round/{id}', [GameController::class, 'gameRound']);
         Route::post('transaction}', [GameController::class, 'gameTransaction']);
     });
+
     Route::prefix('auth')->controller(AuthController::class)->group(function(){
         Route::post('login', 'login');
         Route::post('register', 'signup');
@@ -87,20 +91,14 @@ Route::prefix('v1')->group(function(){
             });
 
 
+            /**
+             * Single routes
+             */
+            Route::get('users/{id?}', [UserController::class, 'getUser']);
+            Route::get('refer/{id?}', [UserController::class, 'userRefer']);
+            Route::get('transactions/{id?}', [UserController::class, 'userTransaction']);
+            Route::post('users-status', [UserController::class, 'getUser']);
+            Route::post('site-statistics', [AdminController::class, 'statistics']);
         });
     });
 });
-
-// BINGO
-// * CASUALGAME
-// * ESPORTS
-// * INSTANTWIN
-// * LIVECASINO
-// * SCRATCHCARD
-// * SHOOTING
-// * SLOT
-// * SPORTS
-// * TABLEGAME
-// * VIDEOPOKER
-// * VIRTUAL_SPORTS
-// * LOTTERY
